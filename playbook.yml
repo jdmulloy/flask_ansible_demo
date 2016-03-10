@@ -1,0 +1,15 @@
+---
+- hosts: web
+  become: yes
+  tasks:
+  - name: install python-flask package(s)
+    apt: name={{ item }} state=present
+    with_items:
+      - python-flask
+- hosts: database
+  become: yes
+  tasks:
+  - name: install mongodb package(s)
+    apt: name={{ item }} state=present
+    with_items:
+      - mongodb

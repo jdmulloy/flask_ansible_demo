@@ -49,4 +49,13 @@ Vagrant.configure(2) do |config|
   # View the documentation for the provider you are using for more
   # information on available options.
 
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "playbook.yml"
+    # Put Vagrant box "default" in web & database ansible groups
+    ansible.groups = {
+      "web" => ["default"],
+      "database" => ["default"],
+    }
+  end
+
 end
