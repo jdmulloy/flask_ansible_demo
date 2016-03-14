@@ -44,7 +44,7 @@ def output_db():
 
 
 @app.route("/get_count", methods=['GET'])
-def get_count_by_day():
+def get_count():
     #use mulloy_demo
     #db.events.find()
     #db.events.find( { "date": new Date("2015-05-13") } )
@@ -69,7 +69,7 @@ def get_count_by_day():
     return output
 
 @app.route("/store", methods=['POST'])
-def save_user():
+def store():
     # TODO: Proper error page
     if request.content_type != "application/json":
         return "Invalid content type: \"" + request.content_type + "\""
