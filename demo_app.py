@@ -1,0 +1,103 @@
+from flask import Flask, request, json, Response
+from flask.ext.pymongo import PyMongo
+import datetime
+import isodate
+
+app_name = "mulloy_demo"
+
+app = Flask(app_name)
+mongo = PyMongo(app)
+#db = mongo.db
+
+app.debug = True
+
+@app.route("/")
+def hello():
+    return "Hello World!!\n"
+
+@app.route("/db")
+def db():
+    return str(mongo.db.keys)+"\n"
+
+@app.route("/clear_db")
+def clear_db():
+    mongo.db.events.delete()
+
+@app.route("/output_db")
+def output_db():
+    db_data = mongo.db.events.find()
+    output = []
+    for record in db_data:
+        record_out = {}
+        for key,value in record.iteritems():
+            if isinstance(value, datetime.datetime):
+                record_out[key] = value.isoformat()
+            elif key == '_id': 
+                record_out[key] = str(value)
+            else: 
+                 record_out[key] = value
+#                record_out[key] = str(type(value))
+#                record_out[key] = 'foobar'
+        output.append(record_out)
+    json_str = json.dumps(output, indent=4, separators=(',', ': '))
+    return Response(json_str, mimetype='application/json')
+
+
+@app.route("/get_count", methods=['GET'])
+def get_count_by_day():
+    #use mulloy_demo
+    #db.events.find()
+    #db.events.find( { "date": new Date("2015-05-13") } )
+    #return "Get User\n"
+    uid_param = request.args.get('uid')
+    date_param = request.args.get('date')
+
+    assert date_param != None
+    assert uid_param != None
+
+    uid = request.args.get('uid')
+    #date = isodate.parse_datetime(date_param)
+    date = datetime.datetime.strptime(date_param, '%Y-%m-%d')
+    #return "uid: " + uid + " date: " + date  
+    output = ''
+    db_data = mongo.db.events.find( { "date": date } )
+    for record in db_data:
+        #output = output + json.dumps(record.keys())
+        output = output + "_id: " + str(record['_id']) + " "
+        output = output + "uid: " + record['uid'] + " "
+        output = output + "timestamp: " + str(record['timestamp']) + "\n"
+    return output
+
+@app.route("/store", methods=['POST'])
+def save_user():
+    # TODO: Proper error page
+    if request.content_type != "application/json":
+        return "Invalid content type: \"" + request.content_type + "\""
+    input_data = json.loads(request.data)
+    output = ""
+    req_keys = set(['uid', 'name', 'date', 'md5checksum'])
+    if not isinstance(input_data, list):
+        return "Invalid data, must provide array of objects"
+    for item in input_data:
+        # Very strict checking of keys
+        if not req_keys == set(item.keys()):
+            return "Invalid item (keys don't match required set): " + json.dumps(item)
+        mongo_obj = {}
+        #TODO: Validate uid is integer
+        mongo_obj['uid'] = item['uid']
+        mongo_obj['name'] = item['name']
+        #TODO: Validate checksum
+        mongo_obj['md5checksum'] = item['md5checksum'] 
+        #TODO: Validate date is a valid timestamp
+        timestamp = isodate.parse_datetime(item['date'])
+        mongo_obj['timestamp'] = timestamp
+        # Hack to convert timestamp to timestamp at midnight
+        # Can't find a good way to make mongo return records by date
+        mongo_obj['date'] = datetime.combine(timestamp.date(), datetime.min.time())
+        mongo.db.events.insert(mongo_obj)
+        #output = output + " " + json.dumps(mongo_obj) 
+        output = output + " " + str(timestamp)
+    return output
+
+if __name__ == "__main__":
+    app.run(port=8080,host="0.0.0.0")
