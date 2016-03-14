@@ -81,18 +81,28 @@ def store():
         # Very strict checking of keys
         if not req_keys == set(item.keys()):
             return "Invalid item (keys don't match required set): " + json.dumps(item)
-        mongo_obj = {}
+
         #TODO: Validate uid is integer
-        mongo_obj['uid'] = item['uid']
-        mongo_obj['name'] = item['name']
+        uid = int(item['uid'])
+        name = item['name']
         #TODO: Validate checksum
-        mongo_obj['md5checksum'] = item['md5checksum'] 
+        md5checksum = item['md5checksum']
         #TODO: Validate date is a valid timestamp
         timestamp = isodate.parse_datetime(item['date'])
-        mongo_obj['timestamp'] = timestamp
         # Hack to convert timestamp to timestamp at midnight
         # Can't find a good way to make mongo return records by date
-        mongo_obj['date'] = datetime.datetime.combine(timestamp.date(), datetime.datetime.min.time())
+        date = datetime.datetime.combine(timestamp.date(), datetime.datetime.min.time())
+
+        cursor = mongo.db.events.find( { "timestamp": timestamp , "uid": uid, "name": name} )
+        if cursor.count() != 0:
+            return "Item already exists in database: " + json.dumps(item)
+        mongo_obj = {
+            'uid': uid,
+            'name': name,
+            'md5checksum': md5checksum,
+            'timestamp': timestamp,
+            'date': date,
+        }
         mongo.db.events.insert(mongo_obj)
         #output = output + " " + json.dumps(mongo_obj) 
         output = output + " " + str(timestamp)
