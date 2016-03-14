@@ -1,4 +1,4 @@
-from flask import Flask, request, json, Response
+from flask import Flask, request, json, jsonify, Response
 from flask.ext.pymongo import PyMongo
 import datetime
 import isodate
@@ -55,18 +55,17 @@ def get_count():
     assert date_param != None
     assert uid_param != None
 
-    uid = request.args.get('uid')
+    uid = int(request.args.get('uid'))
     #date = isodate.parse_datetime(date_param)
     date = datetime.datetime.strptime(date_param, '%Y-%m-%d')
     #return "uid: " + uid + " date: " + date  
     output = ''
-    db_data = mongo.db.events.find( { "date": date } )
-    for record in db_data:
-        #output = output + json.dumps(record.keys())
+    cursor = mongo.db.events.find( { "date": date , "uid": uid} )
+    for record in cursor:
         output = output + "_id: " + str(record['_id']) + " "
-        output = output + "uid: " + record['uid'] + " "
+        output = output + "uid: " + str(record['uid']) + " "
         output = output + "timestamp: " + str(record['timestamp']) + "\n"
-    return output
+    return jsonify(count=cursor.count())
 
 @app.route("/store", methods=['POST'])
 def store():
