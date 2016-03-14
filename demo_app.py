@@ -7,7 +7,6 @@ app_name = "mulloy_demo"
 
 app = Flask(app_name)
 mongo = PyMongo(app)
-#db = mongo.db
 
 app.debug = True
 
@@ -21,7 +20,8 @@ def db():
 
 @app.route("/clear_db")
 def clear_db():
-    mongo.db.events.delete()
+    mongo.db.events.remove()
+    return ""
 
 @app.route("/output_db")
 def output_db():
@@ -93,7 +93,7 @@ def save_user():
         mongo_obj['timestamp'] = timestamp
         # Hack to convert timestamp to timestamp at midnight
         # Can't find a good way to make mongo return records by date
-        mongo_obj['date'] = datetime.combine(timestamp.date(), datetime.min.time())
+        mongo_obj['date'] = datetime.datetime.combine(timestamp.date(), datetime.datetime.min.time())
         mongo.db.events.insert(mongo_obj)
         #output = output + " " + json.dumps(mongo_obj) 
         output = output + " " + str(timestamp)
