@@ -1,0 +1,7 @@
+---
+- name: Install mongo
+  become: yes
+  apt: name=mongodb state=present
+- name: Start mongo
+  become: yes
+  service: name=mongodb state=started enabled=yes

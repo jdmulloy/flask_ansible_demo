@@ -1,0 +1,18 @@
+---
+- name: Install python dependencies
+  become: yes
+  apt: name={{ item }} state=present
+  with_items:
+    - python-flask
+    - python-pip
+    - python-isodate
+- name: Install Flask-PyMongo
+  pip: name=Flask-PyMongo
+- name: Create app directory
+  become: yes
+  file: path=/app state=directory owner=vagrant
+- name: Copy demo_app.py
+  copy: 
+    src: demo_app.py
+    dest: /app/demo_app.py
+    owner: vagrant
