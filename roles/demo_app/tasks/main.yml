@@ -10,9 +10,15 @@
   pip: name=Flask-PyMongo
 - name: Create app directory
   become: yes
-  file: path=/app state=directory owner=vagrant
-- name: Copy demo_app.py
+  file: path={{ item }} state=directory owner=vagrant
+  with_items:
+    - /app
+    - /app/log
+- name: Copy demo_app python files
   copy: 
-    src: demo_app.py
-    dest: /app/demo_app.py
+    src: "{{ item }}"
+    dest: "/app/{{ item }}"
     owner: vagrant
+  with_items:
+    - demo_app.py
+    - test.py
