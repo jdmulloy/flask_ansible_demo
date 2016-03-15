@@ -2,6 +2,7 @@ from flask import Flask, request, json, jsonify, Response
 from flask.ext.pymongo import PyMongo
 import datetime
 import isodate
+import hashlib
 
 app_name = "mulloy_demo"
 
@@ -77,10 +78,19 @@ def store():
         #TODO: Validate uid is integer
         uid = int(item['uid'])
         name = item['name']
+        raw_date = item['date']
         #TODO: Validate checksum
         md5checksum = item['md5checksum']
+        md5_str = '{"date": "' + item['date'] + '", "uid": "' + item['uid'] + '", "name": "' + item['name'] + '"}'
+        m = hashlib.md5()
+        m.update(md5_str)
+        calc_md5 = m.hexdigest()
+
+        if calc_md5 != md5checksum:
+            return "Invalid md5checksum (" + calc_md5  + ") for: " + json.dumps(item), 400
+
         #TODO: Validate date is a valid timestamp
-        timestamp = isodate.parse_datetime(item['date'])
+        timestamp = isodate.parse_datetime(raw_date)
         # Hack to convert timestamp to timestamp at midnight
         # Can't find a good way to make mongo return records by date
         date = datetime.datetime.combine(timestamp.date(), datetime.datetime.min.time())
