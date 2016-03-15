@@ -10,14 +10,6 @@ mongo = PyMongo(app)
 
 app.debug = True
 
-@app.route("/")
-def hello():
-    return "Hello World!!\n"
-
-@app.route("/db")
-def db():
-    return str(mongo.db.keys)+"\n"
-
 @app.route("/clear_db")
 def clear_db():
     mongo.db.events.remove()
