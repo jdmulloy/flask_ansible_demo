@@ -29,8 +29,6 @@ def output_db():
                 record_out[key] = str(value)
             else: 
                  record_out[key] = value
-#                record_out[key] = str(type(value))
-#                record_out[key] = 'foobar'
         output.append(record_out)
     json_str = json.dumps(output, indent=4, separators=(',', ': '))
     return Response(json_str, mimetype='application/json')
@@ -38,10 +36,6 @@ def output_db():
 
 @app.route("/get_count", methods=['GET'])
 def get_count():
-    #use mulloy_demo
-    #db.events.find()
-    #db.events.find( { "date": new Date("2015-05-13") } )
-    #return "Get User\n"
     uid_param = request.args.get('uid')
     date_param = request.args.get('date')
 
@@ -49,9 +43,7 @@ def get_count():
     assert uid_param != None
 
     uid = int(request.args.get('uid'))
-    #date = isodate.parse_datetime(date_param)
     date = datetime.datetime.strptime(date_param, '%Y-%m-%d')
-    #return "uid: " + uid + " date: " + date  
     output = ''
     cursor = mongo.db.events.find( { "date": date , "uid": uid} )
     for record in cursor:
@@ -62,19 +54,17 @@ def get_count():
 
 @app.route("/store", methods=['POST'])
 def store():
-    # TODO: Proper error page
     if request.content_type != "application/json":
-        return "Invalid content type: \"" + request.content_type + "\""
+        return "Invalid content type: \"" + request.content_type + "\"", 400
     input_data = json.loads(request.data)
     output = ""
     req_keys = set(['uid', 'name', 'date', 'md5checksum'])
     if not isinstance(input_data, list):
-        return "Invalid data, must provide array of objects"
+        return "Invalid data, must provide array of objects", 400
     for item in input_data:
         # Very strict checking of keys
         if not req_keys == set(item.keys()):
-            return "Invalid item (keys don't match required set): " + json.dumps(item)
-
+            return "Invalid item (keys don't match required set): " + json.dumps(item), 400
         #TODO: Validate uid is integer
         uid = int(item['uid'])
         name = item['name']
@@ -97,7 +87,7 @@ def store():
 
         cursor = mongo.db.events.find( { "timestamp": timestamp , "uid": uid, "name": name} )
         if cursor.count() != 0:
-            return "Item already exists in database: " + json.dumps(item)
+            return "Item already exists in database: " + json.dumps(item), 400
         mongo_obj = {
             'uid': uid,
             'name': name,
